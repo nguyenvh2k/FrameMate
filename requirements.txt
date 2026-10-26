@@ -1,0 +1,5 @@
+streamlit>=1.41,<2
+opencv-python>=4.10,<5
+numpy>=1.26,<3
+Pillow>=10.4,<13
+filelock>=3.16,<4
