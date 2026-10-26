@@ -1,5 +1,7 @@
 # Phân loại ảnh local bằng Streamlit
 
+Tài liệu kỹ thuật: [Thuật toán và công nghệ sử dụng](TECHNOLOGY.md).
+
 Bản hiện tại xử lý JPG/JPEG/PNG bằng **khuôn mặt**, có tùy chọn **hỗ trợ trang phục và phát hiện dáng/toàn thân**, chạy CPU trên máy. Nhập thư mục nguồn và kết quả, tạo người và chọn nhiều ảnh mẫu, chạy phân loại rồi xem thumbnail để gán sửa. Không cần tài khoản/API key/GPU. Không có dịch vụ cloud nhận ảnh.
 
 ## Chạy trên Windows
