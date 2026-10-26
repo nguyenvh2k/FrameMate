@@ -59,3 +59,23 @@ class AppearancePolicyTests(unittest.TestCase):
         self.assertTrue(face_belongs([20, 10, 50, 50], a))
         self.assertFalse(face_belongs([320, 10, 50, 50], a))
         self.assertFalse(face_belongs([20, 500, 50, 50], a))
+
+    def test_custom_clothing_threshold_and_margin(self):
+        from photo_sorter.policy import supported_identity
+        faces = [(.46, 'A')]
+        outfits = [(.80, 'A', 2), (.72, 'B', 2)]
+        self.assertEqual(supported_identity(faces, outfits), 'Chưa phân loại')
+        self.assertEqual(supported_identity(faces, outfits, outfit_threshold=.78,
+                                            outfit_margin=.05), 'A')
+        self.assertEqual(supported_identity(faces, outfits, outfit_threshold=.78,
+                                            outfit_margin=.10), 'Chưa phân loại')
+        self.assertEqual(supported_identity([], outfits, outfit_threshold=.50,
+                                            outfit_margin=.01), 'Chưa phân loại')
+
+    def test_custom_body_size_thresholds(self):
+        from photo_sorter.policy import main_bodies
+        large = {'box': [0, 0, 200, 600]}
+        small = {'box': [300, 0, 350, 200]}
+        self.assertEqual(main_bodies([large, small], 1000000), [large])
+        self.assertEqual(main_bodies([large, small], 1000000, relative=.05,
+                                     minimum=.005), [large, small])

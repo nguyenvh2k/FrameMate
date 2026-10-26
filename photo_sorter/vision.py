@@ -74,7 +74,8 @@ class FaceEngine:
         return self.feature(image, faces[0]).tolist()
 
     def classify(self, path, people, threshold=0.50, margin=0.10, relative_area=0.20,
-                 min_fraction=0.001, appearance=None, outfits=None):
+                 min_fraction=0.001, appearance=None, outfits=None, appearance_settings=None):
+        options = appearance_settings or {}
         image = read_image(path)
         faces = self.detect(image)
         main = principal_faces(faces, image.shape[0] * image.shape[1], relative_area, min_fraction)
@@ -83,7 +84,10 @@ class FaceEngine:
         bodies = []
         if appearance is not None:
             from .appearance import main_bodies, face_belongs, clothing_descriptor, clothing_scores
-            bodies = main_bodies(appearance.detect(image), image.shape[0] * image.shape[1])
+            bodies = main_bodies(appearance.detect(image, confidence=options.get('body_confidence', 0.55)),
+                                 image.shape[0] * image.shape[1],
+                                 relative=options.get('body_relative', 0.25),
+                                 minimum=options.get('body_minimum', 0.025))
             details['main_bodies'] = len(bodies)
             details['body_boxes'] = [b['box'] for b in bodies]
         if len(main) >= 2 or len(bodies) >= 2:
@@ -104,10 +108,12 @@ class FaceEngine:
             outfit_ranks = clothing_scores(descriptor, outfits or {})
             details['outfit_matches'] = [{'person': n, 'similarity': round(s, 4), 'samples': c}
                                          for s, n, c in outfit_ranks[:3]]
-            if outfit_ranks and outfit_ranks[0][0] >= 0.75:
+            if outfit_ranks and outfit_ranks[0][0] >= options.get('suggestion_threshold', 0.75):
                 # Suggestion only; absence of a reliable face never auto-identifies.
                 details['suggestion'] = outfit_ranks[0][1]
-        label = supported_identity(scores, outfit_ranks, threshold, margin)
+        label = supported_identity(scores, outfit_ranks, threshold, margin,
+                                   outfit_threshold=options.get('outfit_threshold', 0.88),
+                                   outfit_margin=options.get('outfit_margin', 0.12))
         if label != 'Chưa phân loại':
             if choose_identity(scores, threshold, margin) == label:
                 return label, 'Khớp mặt vượt ngưỡng và độ cách biệt', details

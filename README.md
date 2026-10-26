@@ -117,3 +117,14 @@ Trước khi chạy cả buổi, thử bộ nhỏ có ảnh đơn, nhóm, quay l
 ## Xóa người khỏi nhận diện
 
 Trong tab **Người & ảnh mẫu**, chọn người → mở **Xóa người khỏi danh sách nhận diện** → bấm **Xóa [tên] khỏi nhận diện**. Tool xóa người, vector và ảnh mẫu mặt/trang phục ở tất cả buổi chụp. Ảnh nguồn, bản copy kết quả và lịch sử phân loại giữ nguyên; nhãn tên cũ vẫn có thể xuất hiện trong lịch sử. Các lượt nhận diện sau không xét người đã xóa. Có thể thêm lại cùng tên và đăng ký mẫu mới. Nếu file mẫu đang bị chương trình khác giữ, tool báo file chưa dọn được nhưng dữ liệu nhận diện vẫn đã bị loại bỏ.
+
+## Tùy chỉnh ngưỡng dáng/trang phục
+
+Thanh bên có nhóm **Ngưỡng dáng & trang phục**:
+
+- **Độ tin cậy phát hiện toàn thân**: mặc định 0.55. Giảm để phát hiện người khó thấy hơn, nhưng tăng nguy cơ phát hiện nhầm.
+- **Diện tích người / người lớn nhất**: mặc định 0.25; **Diện tích người / ảnh tối thiểu**: 0.025. Giảm để tính người nhỏ/xa là người chính; có thể đưa người hậu cảnh vào Nhóm.
+- **Tương đồng trang phục để hỗ trợ gán người**: mặc định 0.88; **Cách biệt trang phục với người thứ hai**: 0.12. Điều chỉnh hai ngưỡng này không bỏ yêu cầu có mặt đủ bằng chứng và ít nhất hai mẫu trang phục.
+- **Tương đồng trang phục để hiện gợi ý**: mặc định 0.75. Ví dụ điểm 0.6122 sẽ hiện gợi ý nếu đặt 0.60. Không thấy mặt vẫn không tự gán người.
+
+Bấm **Lưu ngưỡng dáng/trang phục** để lưu ngay; bắt đầu phân loại cũng tự lưu. Ngưỡng được ghi trong chi tiết từng kết quả và tính vào dấu vân tay cấu hình. Sau khi đổi, bật **Thử lại ảnh Chưa phân loại với mẫu/cấu hình mới** để áp dụng cho ảnh cũ chưa phân loại; ảnh sửa tay giữ nguyên. Các ngưỡng mới không thay đổi bước kiểm tra chất lượng ảnh mẫu.

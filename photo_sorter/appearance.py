@@ -52,8 +52,8 @@ class AppearanceEngine:
         settings.update({'sync': False})
         self.model = YOLO(str(path), task='pose')
 
-    def detect(self, image):
-        result = self.model.predict(image, device='cpu', imgsz=640, conf=0.55,
+    def detect(self, image, confidence=0.55):
+        result = self.model.predict(image, device='cpu', imgsz=640, conf=confidence,
                                     verbose=False, save=False)[0]
         if result.boxes is None or result.keypoints is None:
             return []

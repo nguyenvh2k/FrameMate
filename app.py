@@ -80,6 +80,35 @@ with st.sidebar:
     fraction = st.number_input('Diện tích mặt / ảnh tối thiểu', 0.0001, 0.05, 0.001, 0.0005, format='%.4f')
     st.caption('Cosine không phải xác suất. Tăng ngưỡng để giảm gán nhầm. Lọc hậu cảnh dựa vào kích thước mặt, có thể bỏ sót người đứng xa.')
 
+    st.header('Ngưỡng dáng & trang phục')
+    previous_appearance = saved.get('appearance_settings', {})
+    body_confidence = st.slider('Độ tin cậy phát hiện toàn thân', 0.20, 0.95,
+                                previous_appearance.get('body_confidence', 0.55), 0.01)
+    body_relative = st.slider('Diện tích người / người lớn nhất', 0.05, 0.80,
+                              previous_appearance.get('body_relative', 0.25), 0.05)
+    body_minimum = st.number_input('Diện tích người / ảnh tối thiểu', 0.001, 0.25,
+                                   previous_appearance.get('body_minimum', 0.025), 0.005, format='%.3f')
+    st.caption('Giảm các ngưỡng trên để bắt người nhỏ/xa hơn; có thể tính cả người đi đường vào Nhóm.')
+    outfit_threshold = st.slider('Tương đồng trang phục để hỗ trợ gán người', 0.50, 0.99,
+                                 previous_appearance.get('outfit_threshold', 0.88), 0.01)
+    outfit_margin = st.slider('Cách biệt trang phục với người thứ hai', 0.01, 0.40,
+                              previous_appearance.get('outfit_margin', 0.12), 0.01)
+    suggestion_threshold = st.slider('Tương đồng trang phục để hiện gợi ý', 0.30, 0.99,
+                                     previous_appearance.get('suggestion_threshold', 0.75), 0.01)
+    st.caption('Không thấy mặt vẫn chỉ gợi ý. Hạ ngưỡng trang phục dễ nhầm người mặc giống nhau. Các ngưỡng này chỉ dùng khi bật hỗ trợ dáng/trang phục.')
+    appearance_settings = dict(body_confidence=body_confidence, body_relative=body_relative,
+                               body_minimum=body_minimum, outfit_threshold=outfit_threshold,
+                               outfit_margin=outfit_margin, suggestion_threshold=suggestion_threshold)
+    if st.button('Lưu ngưỡng dáng/trang phục'):
+        try:
+            with lock:
+                current_settings = json.loads(settings_path.read_text('utf-8')) if settings_path.exists() else {}
+                current_settings['appearance_settings'] = appearance_settings
+                settings_path.write_text(json.dumps(current_settings, ensure_ascii=False), 'utf-8')
+            st.success('Đã lưu ngưỡng cho lần mở sau.')
+        except Exception as exc:
+            st.error(str(exc))
+
 people_tab, run_tab, review_tab = st.tabs(['1. Người & ảnh mẫu', '2. Phân loại', '3. Xem & sửa'])
 with people_tab:
     if 'person_deleted' in st.session_state:
@@ -87,7 +116,7 @@ with people_tab:
     if 'cleanup_warning' in st.session_state:
         st.warning('Đã bỏ dữ liệu nhận diện, nhưng chưa xóa được một số file mẫu: ' + ', '.join(st.session_state.pop('cleanup_warning')))
     with st.form('person', clear_on_submit=True):
-        name = st.text_input('Tên người', placeholder='Huyền')
+        name = st.text_input('Tên người', placeholder='Nhập tên người cần phân loại')
         if st.form_submit_button('Thêm người'):
             try:
                 with lock:
@@ -197,7 +226,8 @@ with run_tab:
                 if use_appearance and not session.strip():
                     raise ValueError('Nhập tên buổi chụp khi bật hỗ trợ trang phục/dáng.')
                 settings_path.write_text(json.dumps({'source': str(source), 'output': str(output),
-                                                    'session': session.strip(), 'appearance': use_appearance}, ensure_ascii=False), 'utf-8')
+                                                    'session': session.strip(), 'appearance': use_appearance,
+                                                    'appearance_settings': appearance_settings}, ensure_ascii=False), 'utf-8')
                 for pending in store.records(source, output):
                     if pending['status'] == 'pending':
                         try:
@@ -216,6 +246,7 @@ with run_tab:
                     'version': 'appearance-v1', 'people': embeddings, 'outfits': outfits,
                     'threshold': threshold, 'margin': margin, 'relative': relative,
                     'fraction': fraction, 'appearance': use_appearance, 'session': session.strip(),
+                    'appearance_settings': appearance_settings,
                 }, sort_keys=True).encode()).hexdigest()
                 paths = scan(source)
                 bar = st.progress(0.0)
@@ -231,10 +262,12 @@ with run_tab:
                             counts['Bỏ qua'] += 1
                         else:
                             label, reason, details = recognizer.classify(path, embeddings, threshold, margin, relative, fraction,
-                                                                        appearance=body_engine, outfits=outfits)
+                                                                        appearance=body_engine, outfits=outfits,
+                                                                        appearance_settings=appearance_settings)
                             details['processing_signature'] = signature
                             details['settings'] = {'threshold': threshold, 'margin': margin, 'relative_area': relative, 'min_fraction': fraction,
-                                                   'appearance': use_appearance, 'session': session.strip()}
+                                                   'appearance': use_appearance, 'session': session.strip(),
+                                                   'appearance_settings': appearance_settings}
                             store.save(key, path, source, output, digest, label, reason, details)
                             counts['Đã xử lý'] += 1
                             with preview.container():

@@ -15,7 +15,8 @@ def choose_identity(scores, threshold, margin):
     return scores[0][1]
 
 
-def supported_identity(face_scores, clothing_scores, face_threshold=0.50, face_margin=0.10):
+def supported_identity(face_scores, clothing_scores, face_threshold=0.50, face_margin=0.10,
+                       outfit_threshold=0.88, outfit_margin=0.12):
     """Clothing must agree with a plausible face; never identify by clothes alone."""
     strong = choose_identity(face_scores, face_threshold, face_margin)
     if strong != 'Chưa phân loại':
@@ -28,9 +29,9 @@ def supported_identity(face_scores, clothing_scores, face_threshold=0.50, face_m
         return 'Chưa phân loại'
     if len(face_scores) > 1 and face_score - face_scores[1][0] < max(0.04, face_margin / 2):
         return 'Chưa phân loại'
-    if outfit_score < 0.88:
+    if outfit_score < outfit_threshold:
         return 'Chưa phân loại'
-    if len(clothing_scores) > 1 and outfit_score - clothing_scores[1][0] < 0.12:
+    if len(clothing_scores) > 1 and outfit_score - clothing_scores[1][0] < outfit_margin:
         return 'Chưa phân loại'
     return person
 
